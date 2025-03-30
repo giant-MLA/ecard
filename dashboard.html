@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Response Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Invitation Responses</h1>
+    <div id="responses"></div>
+
+    <script>
+        const supabase = createClient(
+          process.env.SUPABASE_URL,
+          process.env.SUPABASE_ANON_KEY // Use anon key for public access
+        );
+
+        const responsesDiv = document.getElementById('responses');
+
+        // Fetch initial data
+        async function fetchResponses() {
+            const { data: responses } = await supabase
+                .from('responses')
+                .select('*');
+            updateUI(responses);
+        }
+
+        // Realtime updates
+        supabase
+            .from('responses')
+            .on('INSERT', (payload) => {
+                const newResponse = payload.new;
+                updateUI([...responses, newResponse]);
+            })
+            .subscribe();
+
+        // Update UI
+        let responses = [];
+        async function updateUI(newResponses) {
+            responses = newResponses;
+            responsesDiv.innerHTML = responses
+                .map(
+                    (r) => `<div>Token: ${r.guest_token}, Response: ${r.response}</div>`
+                )
+                .join('');
+        }
+
+        fetchResponses();
+    </script>
+</body>
+</html>
