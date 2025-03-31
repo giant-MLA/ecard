@@ -1,8 +1,8 @@
+require('dotenv').config();
 const express = require('express');
 const multer = require('multer');
 const csvParser = require('csv-parser');
 const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
