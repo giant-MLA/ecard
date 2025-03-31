@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload Attendees</title>
+</head>
+<body>
+    <h1>Upload Attendee CSV</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".csv" required>
+        <button type="submit">Upload and Generate Links</button>
+    </form>
+
+    <h2>Generated Links</h2>
+    <div id="links"></div>
+
+    <script>
+         async function sendToWhatsApp(phoneNumber, link) {
+            try {
+                const response = await fetch('/api/send-whatsapp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to: phoneNumber,
+                        message: `You're invited! 🎉\n${link}`
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    alert('Message sent!');
+                } else {
+                    alert('Error sending message: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to send message.');
+            }
+        }
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = new FormData(e.target);
+            
+            const response = await fetch('/api/upload-csv', {
+                method: 'POST',
+                body: form
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                const linksDiv = document.getElementById('links');
+                linksDiv.innerHTML = data.links.map(link => `
+                    <div>
+    <strong>Name:</strong> ${link.name}<br>
+    <strong>Phone:</strong> ${link.phone}<br>
+    <strong>Link:</strong> <a href="${link.link}" target="_blank">${link.link}</a><br>
+    <!-- Add the send button here -->
+    <button onclick="sendToWhatsApp('${link.phone}', '${link.link}')">
+      Send via WhatsApp
+    </button>
+  </div>
+                `).join('<hr>');
+            }
+        });
+    </script>
+</body>
+</html>
